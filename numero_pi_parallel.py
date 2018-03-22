@@ -1,21 +1,17 @@
 from mpi4py import MPI
-from mpi4py.MPI import ANY_SOURCE, FLOAT
 import random
 import math
+import numpy
 
 
-NPOINTS = 10000.
-
-
-def procedure(p):
-    circle_count = 0.
-    npoints = NPOINTS
+def procedure(p, npoints):
+    circle_count = 0
 
     num = npoints / p
 
     for i in range(int(num)):
         if InsideCircle(random.uniform(0.0, 1.0), random.uniform(0.0, 1.0)):
-            circle_count += 1.
+            circle_count += 1
     return circle_count
 
 
@@ -28,13 +24,21 @@ if __name__ == '__main__':
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-    aux = []
-    summa = procedure(size)
-    if rank == 0:
-        for i in range(1, size):
-            comm.recv(aux, ANY_SOURCE)
-        summa += sum(aux)
+    np = 10000  # number of points
 
-        print("The value of pi is", 4. * NPOINTS / summa)
+    summa = numpy.zeros(1)
+    recv_buffer = numpy.zeros(1)
+    print(type(summa), "definida de numpy")
+    print(type(recv_buffer), "definido de numpy")
+    summa[0] = procedure(size, np)
+    print(type(summa), "llamada la funcion")
+
+    if rank == 0:
+        total = summa[0]
+        for i in range(1, size):
+            comm.Recv(recv_buffer, MPI.ANY_SOURCE)
+            total += recv_buffer[0]
+
+        print("The value of pi is", 4.0 * total / np)
     else:
-        comm.send([summa], dest=0)
+        comm.Send()
