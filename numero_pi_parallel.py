@@ -6,11 +6,9 @@ import numpy
 
 def procedure(p, npoints):
     circle_count = 0
-
     num = npoints / p
-
     for i in range(int(num)):
-        if InsideCircle(random.uniform(0.0, 1.0), random.uniform(0.0, 1.0)):
+        if math.sqrt(math.pow(random.uniform(0.0, 1.0), 2) + math.pow(random.uniform(0.0, 1.0), 2)) <= 1:
             circle_count += 1
     return circle_count
 
@@ -26,12 +24,12 @@ if __name__ == '__main__':
 
     np = 10000  # number of points
 
+    random.seed(rank)
+
     summa = numpy.zeros(1)
     recv_buffer = numpy.zeros(1)
-    print(type(summa), "definida de numpy")
-    print(type(recv_buffer), "definido de numpy")
+
     summa[0] = procedure(size, np)
-    print(type(summa), "llamada la funcion")
 
     if rank == 0:
         total = summa[0]
@@ -41,4 +39,4 @@ if __name__ == '__main__':
 
         print("The value of pi is", 4.0 * total / np)
     else:
-        comm.Send()
+        comm.Send(summa, dest=0)
